@@ -243,14 +243,15 @@ if (contactForm) {
     submitBtn.innerHTML = `<span class="btn-spinner"></span><span class="btn-text" style="position:relative;z-index:1">Wysyłanie…</span>`;
 
     const data = new FormData();
-    data.append('name',    fields.name.value.trim());
-    data.append('email',   fields.email.value.trim());
-    data.append('subject', fields.subject.value.trim());
-    data.append('message', fields.message.value.trim());
-    // FormSubmit AJAX mode — replace with your email
-    data.append('_subject', `[portfolio] ${fields.subject.value.trim()}`);
-    data.append('_captcha', 'false');
-    data.append('_template', 'table');
+    data.append('name',     fields.name.value.trim());
+    data.append('email',    fields.email.value.trim());
+    data.append('subject',  fields.subject.value.trim());
+    data.append('message',  fields.message.value.trim());
+    // FormSubmit config
+    data.append('_subject',  `[portfolio] ${fields.subject.value.trim()}`);
+    data.append('_replyto',  fields.email.value.trim()); // reply directly to sender
+    data.append('_captcha',  'false');
+    // _template omitted: 'table' strips emails on Proton Mail
 
     try {
       const res = await fetch('https://formsubmit.co/ajax/pssyho@proton.me', {
@@ -260,6 +261,10 @@ if (contactForm) {
       });
 
       if (!res.ok) throw new Error('network');
+
+      // FormSubmit returns { success: "true" } as string, not boolean
+      const json = await res.json();
+      if (json.success !== 'true' && json.success !== true) throw new Error('failed');
 
       // Hide form, show success with GSAP
       gsap.to(contactForm, {
